@@ -129,6 +129,7 @@ var Swiper = function (selector, params) {
         moveStartThreshold: false,
         onlyExternal : false,
         createPagination : true,
+        paginationByGroup: false,
         pagination : false,
         paginationElement: 'span',
         paginationClickable: false,
@@ -2138,6 +2139,14 @@ var Swiper = function (selector, params) {
             var paginationHTML = '';
             var numOfSlides = _this.slides.length;
             var numOfButtons = numOfSlides;
+            if (params.paginationByGroup) {
+                if (!_this.visibleSlides) {
+                    _this.calcVisibleSlides(0);
+                }
+                numOfButtons = Math.ceil(numOfSlides / (_this.visibleSlides.length || 1));
+            } else {
+                numOfButtons = numOfSlides;
+            }
             if (params.loop) numOfButtons -= _this.loopedSlides * 2;
             for (var i = 0; i < numOfButtons; i++) {
                 paginationHTML += '<' + params.paginationElement + ' class="' + params.paginationElementClass + '"></' + params.paginationElement + '>';
@@ -2172,7 +2181,9 @@ var Swiper = function (selector, params) {
         var target = e.target || e.srcElement;
         var pagers = _this.paginationButtons;
         for (var i = 0; i < pagers.length; i++) {
-            if (target === pagers[i]) index = i;
+            if (target === pagers[i]) {
+                index = params.paginationByGroup ? Math.min(Math.floor(i * _this.visibleSlides.length), _this.slides.length) : i;
+            }
         }
         if (params.autoplay) _this.stopAutoplay(true);
         _this.swipeTo(index);
@@ -2189,7 +2200,6 @@ var Swiper = function (selector, params) {
         for (var i = 0; i < pagers.length; i++) {
             pagers[i].className = params.paginationElementClass;
         }
-
         var indexOffset = params.loop ? _this.loopedSlides : 0;
         if (params.paginationAsRange) {
             if (!_this.visibleSlides) _this.calcVisibleSlides(position);
@@ -2221,6 +2231,10 @@ var Swiper = function (selector, params) {
             else {
                 if (pagers[_this.activeIndex]) pagers[_this.activeIndex].className += ' ' + params.paginationActiveClass;
             }
+        }
+        else if (params.paginationByGroup) {
+            var index = Math.floor((_this.activeIndex+params.slidesPerView-1) / params.slidesPerView);
+            pagers[index].className += ' ' + params.paginationActiveClass + ' ' + params.paginationVisibleClass;
         }
         else {
             if (params.loop) {
